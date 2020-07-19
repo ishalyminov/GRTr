@@ -52,7 +52,7 @@ def print_prediction(in_dialogue, in_pred_ids, in_tokenizer, in_pred_turn_num, n
                 predict_turn=in_pred_turn_num)
 
 
-def fine_tune(in_model, in_tokenizer, in_optimizer, in_support_set, in_args, amp=None):
+def fine_tune(in_model, in_tokenizer, in_optimizer, in_support_set, in_args, amp=None, predict_side='usr'):
     trainset, validset = split_dataset(in_support_set, in_args.support_dev_ratio)
 
     trn_loader, trn_sampler = get_loader_for_dataset(trainset,
@@ -61,14 +61,16 @@ def fine_tune(in_model, in_tokenizer, in_optimizer, in_support_set, in_args, amp
                                                      in_args.num_candidates,
                                                      in_args.train_batch_size,
                                                      in_args.dataloader_num_workers,
-                                                     in_args.distributed)
+                                                     in_args.distributed,
+                                                     predict_side=in_args.predict_side)
     val_loader, val_sampler = get_loader_for_dataset(validset,
                                                      in_tokenizer,
                                                      in_args.max_history,
                                                      in_args.num_candidates,
                                                      in_args.valid_batch_size,
                                                      in_args.dataloader_num_workers,
-                                                     in_args.distributed)
+                                                     in_args.distributed,
+                                                     predict_side=in_args.predict_side)
     train(in_args,
           in_model,
           in_tokenizer,
@@ -223,6 +225,7 @@ def parse_args():
     parser.add_argument("--eval_before_start",
                         action='store_true',
                         help="If true start with a first evaluation before training")
+    parser.add_argument("--predict_side", type="str", default="usr", help="usr/sys")
     parser.add_argument("--device", type=str, default="cuda" if torch.cuda.is_available() else "cpu",
                         help="Device (cuda or cpu)")
     parser.add_argument("--distributed", type=bool, default=False)

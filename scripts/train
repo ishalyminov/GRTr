@@ -70,13 +70,15 @@ def main(args):
                                                          args.max_history,
                                                          args.num_candidates,
                                                          args.train_batch_size,
-                                                         distributed=args.distributed)
+                                                         distributed=args.distributed,
+                                                         predict_side=args.predict_side)
     valid_loader, valid_sampler = get_loader_for_dataset(valid_dataset,
                                                          tokenizer,
                                                          args.max_history,
                                                          args.num_candidates,
                                                          args.train_batch_size,
-                                                         distributed=args.distributed)
+                                                         distributed=args.distributed,
+                                                         predict_side=args.predict_side)
     train(args, model, tokenizer, optimizer, train_loader, train_sampler, valid_loader, valid_sampler)
 
 

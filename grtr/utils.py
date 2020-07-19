@@ -176,10 +176,11 @@ def build_input_from_segments(history, reply, tokenizer, lm_labels=False, with_e
     return instance, sequence
 
 
-def slice_dialogue_into_gpt2_input(dialogue, max_history, shared_candidates_cache, num_candidates):
+def slice_dialogue_into_gpt2_input(dialogue, max_history, shared_candidates_cache, num_candidates, predict_side='usr'):
     history = deque([], maxlen=max_history * 2 - 1)
     result = []
-    for idx in range(1, len(dialogue), 2):
+    start_idx = 1 if predict_side == 'usr' else 0
+    for idx in range(start_idx, len(dialogue), 2):
         history.append(dialogue[idx - 1])
         utterance = dialogue[idx]
         # candiates are: {num_candidates - 1} distractors + gold response
@@ -242,7 +243,8 @@ def get_loader_for_dataset(dataset,
                            batch_size,
                            dataloader_num_workers=0,
                            distributed=False,
-                           max_samples=0):
+                           max_samples=0,
+                           predict_side='usr'):
     candidates_cache = populate_candidates_cache(dataset, max_len=1000)
 
     logger.info("Build inputs and labels")
@@ -254,7 +256,8 @@ def get_loader_for_dataset(dataset,
         for history, candidates in slice_dialogue_into_gpt2_input(dialogue,
                                                                   max_history,
                                                                   candidates_cache,
-                                                                  num_candidates):
+                                                                  num_candidates,
+                                                                  predict_side):
             for j, candidate in enumerate(candidates):
                 lm_labels = bool(j == num_candidates - 1)
                 instance, _ = build_input_from_segments(history, candidate, tokenizer, lm_labels)
