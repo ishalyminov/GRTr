@@ -52,7 +52,7 @@ def print_prediction(in_dialogue, in_pred_ids, in_tokenizer, in_pred_turn_num, n
                 predict_turn=in_pred_turn_num)
 
 
-def fine_tune(in_model, in_tokenizer, in_optimizer, in_support_set, in_args, amp=None, predict_side='usr'):
+def fine_tune(in_model, in_tokenizer, in_optimizer, in_support_set, in_args, amp=None):
     trainset, validset = split_dataset(in_support_set, in_args.support_dev_ratio)
 
     trn_loader, trn_sampler = get_loader_for_dataset(trainset,
