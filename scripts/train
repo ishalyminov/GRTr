@@ -122,6 +122,7 @@ def parse_args():
     parser.add_argument("--eval_before_start",
                         action='store_true',
                         help="If true start with a first evaluation before training")
+    parser.add_argument("--predict_side", type="str", default="usr", help="usr/sys")
     parser.add_argument("--device",
                         type=str,
                         default="cuda" if torch.cuda.is_available() else "cpu",
