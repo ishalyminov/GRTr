@@ -32,7 +32,7 @@ def split_dataset(in_dataset, in_dev_ratio):
     return in_dataset[:train_dialogues_num], in_dataset[train_dialogues_num:]
 
 
-def print_prediction(in_dialogue, in_pred_ids, in_tokenizer, in_pred_turn_num, nlgeval):
+def print_prediction(in_dialogue, in_pred_ids, in_candidates_map, in_winner, in_tokenizer, in_pred_turn_num, nlgeval):
     ctxwrap = TextWrapper(130, initial_indent='- ', subsequent_indent=' ' * len('- '))
     print("--------------------", in_dialogue['id'], "-----------------")
     # target batch size is always 1 if spec file is used
@@ -44,7 +44,16 @@ def print_prediction(in_dialogue, in_pred_ids, in_tokenizer, in_pred_turn_num, n
     print(ctxwrap.fill("  TARGET: " + target_text))
 
     pred_text = in_tokenizer.decode(in_pred_ids, skip_special_tokens=True)
-    print(ctxwrap.fill("  PRED:   " + pred_text))
+    print(ctxwrap.fill("  PRED:   " + pred_text + "[{}]".format(in_winner)))
+
+    candidates_num = in_candidates_map['candidates']
+    candidates_with_scores = [(candidate, score, method)
+                              for candidate, score, method in zip(in_candidates_map['candidates'],
+                                                                  in_candidates_map['scores'],
+                                                                  ['retrieved'] * (candidates_num - 1) + ['generated'])]
+    for candidate, score, method in sorted(candidates_with_scores, key=lambda x: x[1], reverse=True):
+        cand_text = in_tokenizer.decode(candidate, skip_special_tokens=True)
+        print(ctxwrap.fill("  CANDIDATE:   {} [{:.3f}] [{}]".format(cand_text, score, method)))
     nlgeval.add(target_text,
                 pred_text,
                 dlg_id=in_dialogue['id'],
@@ -178,14 +187,15 @@ def main(args):
                         support_contexts.append(support_dlg_history)
                         support_responses.append(support_response)
                     with torch.no_grad():
-                        out_ids = generate_and_rank(support_contexts,
-                                                    support_responses,
-                                                    target_dlg_history,
-                                                    tokenizer,
-                                                    model,
-                                                    transformer_encoder,
-                                                    args)
-                    print_prediction(dialogue, out_ids, tokenizer, spec['predict_turn'], nlgeval)
+                        out_ids, candidates_map, winner = generate_and_rank(support_contexts,
+                                                                            support_responses,
+                                                                            target_dlg_history,
+                                                                            tokenizer,
+                                                                            model,
+                                                                            transformer_encoder,
+                                                                            args,
+                                                                            ret_winner=True)
+                    print_prediction(dialogue, out_ids, candidates_map, winner, tokenizer, spec['predict_turn'], nlgeval)
 
 
 def parse_args():
