@@ -181,7 +181,10 @@ def slice_dialogue_into_gpt2_input(dialogue, max_history, shared_candidates_cach
     result = []
     start_idx = 1 if predict_side == 'usr' else 0
     for idx in range(start_idx, len(dialogue), 2):
-        history.append(dialogue[idx - 1])
+        if 0 < idx:
+            history.append(dialogue[idx - 1])
+        else:
+            history.append([])
         utterance = dialogue[idx]
         # candiates are: {num_candidates - 1} distractors + gold response
         candidates = []
