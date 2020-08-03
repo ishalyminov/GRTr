@@ -46,7 +46,7 @@ def print_prediction(in_dialogue, in_pred_ids, in_candidates_map, in_winner, in_
     pred_text = in_tokenizer.decode(in_pred_ids, skip_special_tokens=True)
     print(ctxwrap.fill("  PRED:   " + pred_text + "[{}]".format(in_winner)))
 
-    candidates_num = in_candidates_map['candidates']
+    candidates_num = len(in_candidates_map['candidates'])
     candidates_with_scores = [(candidate, score, method)
                               for candidate, score, method in zip(in_candidates_map['candidates'],
                                                                   in_candidates_map['scores'],
@@ -187,7 +187,7 @@ def main(args):
                         support_contexts.append(support_dlg_history)
                         support_responses.append(support_response)
                     with torch.no_grad():
-                        out_ids, candidates_map, winner = generate_and_rank(support_contexts,
+                        out_ids, winner, candidates_map = generate_and_rank(support_contexts,
                                                                             support_responses,
                                                                             target_dlg_history,
                                                                             tokenizer,

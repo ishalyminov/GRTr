@@ -376,9 +376,10 @@ def generate_and_rank(support_contexts, support_responses, target_context, token
     generated = sample_sequence(target_context, tokenizer, model, args)
     winner = 'generated'
     if not len(support_contexts):
-        return (generated, winner, {'scores': [1.0], 'candidates': [generated]}) \
-            if ret_winner \
-            else generated, {'scores': [1.0], 'candidates': [generated]}
+        if ret_winner:
+            return generated, winner, {'scores': [1.0], 'candidates': [generated]}
+        else:
+            return generated, {'scores': [1.0], 'candidates': [generated]}
     target_context_emb = embed_dialogue(target_context, [], tokenizer, encoder, args)
 
     num_ret_candidates = args.num_candidates - 1
@@ -391,7 +392,10 @@ def generate_and_rank(support_contexts, support_responses, target_context, token
         else:
             heappushpop(candidates_heap, (-distance, idx))
     if len(candidates_heap) == 0:
-        return (generated, winner) if ret_winner else generated
+        if ret_winner:
+            return generated, winner, {'scores': [1.0], 'candidates': [generated]}
+        else:
+            return generated, {'scores': [1.0], 'candidates': [generated]}  
 
     ret_instances = []
     candidates = []
@@ -438,9 +442,10 @@ def generate_and_rank(support_contexts, support_responses, target_context, token
         winner = 'retrieved'
     logger.info(f"{winner} response won")
 
-    return (candidates[arg_max], winner, {'scores': mc_labels, 'candidates': candidates}) \
-        if ret_winner \
-        else candidates[arg_max], {'scores': mc_labels, 'candidates': candidates}
+    if ret_winner:
+        return candidates[arg_max], winner, {'scores': mc_labels[0], 'candidates': candidates}
+    else:
+        return candidates[arg_max], {'scores': mc_labels[0], 'candidates': candidates}
 
 
 def embed_dialogue(context, response, tokenizer, encoder, args):
